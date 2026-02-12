@@ -128,16 +128,28 @@ Step 4: Present candidates to user:
 **Candidate Display Format** (actual agent output):
 
 ```
-📅 Available slots next week (30 min):
+� Available slots next week (30 min):
 
-1. 2/17 (Mon) 10:00 - 10:30 ✅
-2. 2/17 (Mon) 14:00 - 14:30 ✅
-3. 2/18 (Tue) 11:00 - 11:30 ⚠️ Tentative meeting exists
+- 2/17（Mon） 10:00〜10:30 ★ or 14:00〜14:30 🔄
+- 2/18（Tue） 11:00〜11:30 ★, 15:00〜15:30 ★
+- 2/19（Wed） No availability
 
-⚠️ = You have a tentative (not yet confirmed) meeting at this time.
-     You can still book — the tentative meeting can be declined.
+★ = Confirmed free (no meetings)
+🔄 = Adjustable (tentative meeting — can be rescheduled)
 
-💡 Note: Other attendees' schedules cannot be checked due to DLP policy.
+📌 Point Table
+
+| Date        | Status | Note                 |
+| ----------- | ------ | -------------------- |
+| 2/17 (Mon)  | △      | Morning has standup  |
+| 2/18 (Tue)  | ○      | Afternoon mostly free |
+| 2/19 (Wed)  | ◎      | **Nearly all day free** |
+
+◎ = Nearly all day free (4+ hours)
+○ = Fairly free (2-4 hours)
+△ = Limited (under 2 hours)
+
+💡 Other attendees' schedules cannot be checked due to DLP policy.
    The invite will be sent as a Teams meeting — attendees accept/decline.
 
 → Pick a number to create the meeting, or say "all" to send all as invites.
@@ -295,6 +307,36 @@ npm run dev
 - **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth
 - **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware
 - **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
+
+## Design Lineage — VS Code Agent Workflow → Copilot Studio
+
+This project was originally designed as a **VS Code Agent Workflow** (multi-agent system using `.agent.md` files) and then translated into **Copilot Studio Connected Agents**. The design lineage:
+
+```
+AG-Private_Biz_Ops (VS Code Agent Workflow — private repo)
+│  Multi-agent design: orchestrator.agent.md, availability-finder.agent.md,
+│  task-manager.agent.md, report-generator.agent.md
+│  Display format: ★/🔄/◎○△ point table, candidate presentation rules
+│
+├──→ FY26_techconnect_mym (Hackathon development workspace — private repo)
+│      MCP Server implementation, Copilot Studio configuration,
+│      DLP troubleshooting (5 approaches), session logs
+│
+└──→ biz-ops-calendar-agent (This repo — public, submission)
+       Production agent on Copilot Studio + MCP Server code
+```
+
+**What was translated from VS Code Agent Workflow to Copilot Studio Instructions:**
+
+| VS Code Agent Workflow (`.agent.md`) | Copilot Studio Instructions |
+|---|---|
+| `orchestrator.agent.md` routing rules | Connected Agents — Instruction-based routing |
+| `availability-finder.agent.md` I/O Contract | Calendar Sub-Agent 3-step workflow |
+| Candidate display format (★/🔄 + ◎○△ point table) | RULE 5: Candidate Display Format |
+| `slotCalculator.ts` Tentative handling | availabilityView interpretation rules |
+| `slotCalculator.ts` WorkingElsewhere exclusion | "4" = excluded from candidates |
+| Done Criteria (check → propose → confirm) | Mandatory confirmation before CreateMeeting |
+| OOF Pre-Check phase | GetCurrentDateTime mandatory first step |
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
