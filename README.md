@@ -58,6 +58,49 @@ M365 Copilot Chat (Teams / Web)
 | 会議管理 MCP サーバー    | O365 Outlook Connector    | GetCalendarView, CreateMeeting (9 tools)              |
 | メール管理 MCP サーバー  | O365 Outlook Connector    | SendEmail, ListEmails (6 tools)                       |
 
+## Connected Agents — Multi-Agent Orchestration
+
+The core of this project is the **Connected Agents** pattern in Copilot Studio — a parent agent (Orchestrator) that automatically delegates tasks to specialized sub-agents.
+
+### How Orchestrator Routing Works
+
+The Orchestrator uses **Instruction-based routing** to decide which sub-agent handles each request:
+
+```
+Orchestrator Instructions (excerpt):
+"Automatically use the Calendar Sub-Agent for scheduling, meetings,
+and availability requests. Use the Email Sub-Agent for email-related tasks.
+Choose the right sub-agent without asking the user."
+```
+
+No manual topic routing or keyword matching needed — the LLM understands intent and delegates automatically.
+
+### Calendar Sub-Agent — Multi-Step Reasoning
+
+The Calendar Sub-Agent performs complex multi-step workflows via Instructions:
+
+1. **GetCurrentDateTime** (mandatory first step) — Anchors date calculations to prevent hallucination
+2. **GetSchedule Flow** — Calls Power Automate → Graph API to fetch attendee `availabilityView`
+3. **Parse availabilityView** — Decodes 30-min interval string (`"000022220000"`) into Free/Busy/Tentative
+4. **Cross-reference** — Compares with own calendar via `GetCalendarViewOfMeetings`
+5. **Present candidates** — Shows 3 time slots with ✅ Free / ⚠️ Tentative indicators
+6. **User confirmation** — Waits for user to pick a slot (never creates meetings without explicit approval)
+7. **CreateMeeting** — Creates Teams meeting with online link (`isOnlineMeeting=true`)
+
+### Email Sub-Agent
+
+Handles email operations via Office 365 Outlook connector — send, reply, forward, list, and flag emails.
+
+### Instruction Engineering Highlights
+
+| Challenge | Solution in Instructions |
+|---|---|
+| Sub-agent asks "Which calendar ID?" | Force `calendar_id="Calendar"` always |
+| Date hallucination (wrong "next week") | Mandatory `GetCurrentDateTime` first + calculation examples |
+| JSON metadata leaking to user | "Never output raw JSON or tool call explanations" |
+| Accidental meeting creation | 3-step mandatory workflow: check → propose → confirm |
+| Content moderation false positives | Natural language style instead of `## RULE` / `Do NOT` patterns |
+
 ## Demo Scenarios
 
 ### 1. Check My Schedule
