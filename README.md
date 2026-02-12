@@ -49,12 +49,12 @@ M365 Copilot Chat (Teams / Web)
 ## Copilot Studio Components
 
 | Component               | Type                   | Description                                           |
-| ------------------------ | ---------------------- | ----------------------------------------------------- |
-| Biz-Ops Calendar Agent   | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent        |
-| Calendar Sub-Agent       | Connected Agent        | Schedule lookup, meeting creation, candidate proposal |
-| Email Sub-Agent          | Connected Agent        | Email send, reply, forward, list, flag                |
-| 会議管理 MCP サーバー    | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)              |
-| メール管理 MCP サーバー  | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                       |
+| ----------------------- | ---------------------- | ----------------------------------------------------- |
+| Biz-Ops Calendar Agent  | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent        |
+| Calendar Sub-Agent      | Connected Agent        | Schedule lookup, meeting creation, candidate proposal |
+| Email Sub-Agent         | Connected Agent        | Email send, reply, forward, list, flag                |
+| 会議管理 MCP サーバー   | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)              |
+| メール管理 MCP サーバー | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                       |
 
 ## Connected Agents — Multi-Agent Orchestration
 
@@ -90,13 +90,13 @@ Handles email operations via Office 365 Outlook connector — send, reply, forwa
 
 ### Instruction Engineering Highlights
 
-| Challenge | Solution in Instructions |
-|---|---|
-| Sub-agent asks "Which calendar ID?" | Force `calendar_id="Calendar"` always |
-| Date hallucination (wrong "next week") | Mandatory `GetCurrentDateTime` first + calculation examples |
-| JSON metadata leaking to user | "Never output raw JSON or tool call explanations" |
-| Accidental meeting creation | 3-step mandatory workflow: check → propose → confirm |
-| Content moderation false positives | Natural language style instead of `## RULE` / `Do NOT` patterns |
+| Challenge                              | Solution in Instructions                                        |
+| -------------------------------------- | --------------------------------------------------------------- |
+| Sub-agent asks "Which calendar ID?"    | Force `calendar_id="Calendar"` always                           |
+| Date hallucination (wrong "next week") | Mandatory `GetCurrentDateTime` first + calculation examples     |
+| JSON metadata leaking to user          | "Never output raw JSON or tool call explanations"               |
+| Accidental meeting creation            | 3-step mandatory workflow: check → propose → confirm            |
+| Content moderation false positives     | Natural language style instead of `## RULE` / `Do NOT` patterns |
 
 ## Demo Scenarios
 
@@ -138,8 +138,8 @@ User: "未読メールを5件表示して"
 
 ## Screenshots
 
-| Self Calendar | E2E Scheduling | Copilot Studio |
-|:---:|:---:|:---:|
+|                          Self Calendar                           |                      E2E Scheduling                      |                   Copilot Studio                   |
+| :--------------------------------------------------------------: | :------------------------------------------------------: | :------------------------------------------------: |
 | ![Self Calendar](screenshots/e2e-test-self-calendar-success.png) | ![E2E](screenshots/e2e-test-multi-person-scheduling.png) | ![Studio](screenshots/e2e-test-copilot-studio.png) |
 
 ## Business Value
@@ -154,12 +154,25 @@ User: "未読メールを5件表示して"
 
 Built from scratch in TypeScript — a fully functional MCP server with Read + Write tools, including the cross-user scheduling that DLP blocked in Copilot Studio:
 
-| Tool                    | Description                                   | Read/Write |
-| ----------------------- | --------------------------------------------- | ---------- |
-| `get_schedule`          | Fetch attendee availability via Graph API     | Read       |
-| `find_available_slots`  | Find common free time slots (tentative-aware) | Read       |
-| `create_event`          | Create a Teams meeting event                  | Write      |
-| `get_current_date_time` | Get current date/time in UTC and JST          | Read       |
+| Tool                    | Description                                   | Read/Write | Adaptive Card |
+| ----------------------- | --------------------------------------------- | ---------- | ------------- |
+| `get_schedule`          | Fetch attendee availability via Graph API     | Read       |               |
+| `find_available_slots`  | Find common free time slots (tentative-aware) | Read       | ✅ Slot candidates card |
+| `create_event`          | Create a Teams meeting event                  | Write      | ✅ Meeting confirmation card |
+| `get_current_date_time` | Get current date/time in UTC and JST          | Read       |               |
+
+### Adaptive Cards
+
+The MCP server generates **Adaptive Card JSON** alongside structured data for rich UI rendering:
+
+- **Slot Candidates Card** — Numbered list with ✅ Free / ⚠️ Tentative indicators per time slot
+- **Meeting Confirmation Card** — FactSet with subject, date/time, attendees + Teams join button
+
+Sample templates are available in [`docs/adaptive-cards/`](docs/adaptive-cards/) for use in Copilot Studio Topics or Teams message extensions.
+
+| Slot Candidates | Meeting Confirmation |
+|:---:|:---:|
+| 📅 空き時間候補 (3件) | ✅ 会議が作成されました |
 
 **Tech Stack**: MCP SDK v1.26, Express, Streamable HTTP, Zod v4, API Key auth (`crypto.timingSafeEqual`)
 
@@ -217,6 +230,9 @@ npm run dev
 │   ├── package.json
 │   └── tsconfig.json
 ├── docs/
+│   ├── adaptive-cards/                      # Adaptive Card JSON templates
+│   │   ├── slot-candidates.json             # Slot candidates card
+│   │   └── meeting-confirmation.json        # Meeting confirmation card
 │   ├── copilot-studio-calendar-sub-agent-instructions.md
 │   └── demo-script.md
 ├── screenshots/                         # Demo screenshots
@@ -246,11 +262,10 @@ npm run dev
 
 | Technical Item          | Points    | Status                                                                                 |
 | ----------------------- | --------- | -------------------------------------------------------------------------------------- |
-| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                         |
+| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                          |
 | Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                    |
 | External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (works in VS Code; DLP blocks Copilot Studio connection) |
-| OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               |
-
+| OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               || Adaptive Cards          | 5 pts     | ✅ Slot candidates card + Meeting confirmation card (in MCP server + templates)        |
 ## Built With
 
 - [Copilot Studio](https://copilotstudio.microsoft.com/) — M365 Copilot agent with Connected Agents

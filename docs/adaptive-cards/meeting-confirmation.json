@@ -1,0 +1,45 @@
+{
+  "type": "AdaptiveCard",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "✅ 会議が作成されました",
+          "weight": "Bolder",
+          "size": "Large",
+          "color": "Good"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "FactSet",
+          "facts": [
+            { "title": "📋 件名", "value": "チームSync" },
+            { "title": "📅 日時", "value": "2/17 (月) 10:00 - 10:30" },
+            { "title": "⏱ 所要時間", "value": "30 分" },
+            { "title": "👥 参加者", "value": "alice@contoso.com, bob@contoso.com" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ActionSet",
+      "actions": [
+        {
+          "type": "Action.OpenUrl",
+          "title": "📎 Teams 会議に参加",
+          "url": "https://teams.microsoft.com/l/meetup-join/example",
+          "style": "positive"
+        }
+      ]
+    }
+  ]
+}
