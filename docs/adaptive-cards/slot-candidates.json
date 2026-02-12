@@ -35,15 +35,17 @@
           "type": "Column",
           "width": "stretch",
           "items": [
-            { "type": "TextBlock", "text": "2/17 (月) 10:00 - 10:30", "weight": "Bolder" }
+            {
+              "type": "TextBlock",
+              "text": "2/17 (月) 10:00 - 10:30",
+              "weight": "Bolder"
+            }
           ]
         },
         {
           "type": "Column",
           "width": "auto",
-          "items": [
-            { "type": "TextBlock", "text": "✅ 空き", "color": "Good" }
-          ]
+          "items": [{ "type": "TextBlock", "text": "✅ 空き", "color": "Good" }]
         }
       ]
     },
@@ -61,15 +63,17 @@
           "type": "Column",
           "width": "stretch",
           "items": [
-            { "type": "TextBlock", "text": "2/17 (月) 14:00 - 14:30", "weight": "Bolder" }
+            {
+              "type": "TextBlock",
+              "text": "2/17 (月) 14:00 - 14:30",
+              "weight": "Bolder"
+            }
           ]
         },
         {
           "type": "Column",
           "width": "auto",
-          "items": [
-            { "type": "TextBlock", "text": "✅ 空き", "color": "Good" }
-          ]
+          "items": [{ "type": "TextBlock", "text": "✅ 空き", "color": "Good" }]
         }
       ]
     },
@@ -87,8 +91,18 @@
           "type": "Column",
           "width": "stretch",
           "items": [
-            { "type": "TextBlock", "text": "2/18 (火) 11:00 - 11:30", "weight": "Bolder" },
-            { "type": "TextBlock", "text": "仮承諾: alice@contoso.com", "size": "Small", "color": "Warning", "wrap": true }
+            {
+              "type": "TextBlock",
+              "text": "2/18 (火) 11:00 - 11:30",
+              "weight": "Bolder"
+            },
+            {
+              "type": "TextBlock",
+              "text": "仮承諾: alice@contoso.com",
+              "size": "Small",
+              "color": "Warning",
+              "wrap": true
+            }
           ]
         },
         {

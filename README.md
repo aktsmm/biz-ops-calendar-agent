@@ -49,14 +49,14 @@ M365 Copilot Chat (Teams / Web)
 
 ## Copilot Studio Components
 
-| Component               | Type                   | Description                                                |
-| ----------------------- | ---------------------- | ---------------------------------------------------------- |
-| Biz-Ops Calendar Agent  | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent             |
-| Calendar Sub-Agent      | Connected Agent        | Schedule lookup, meeting creation, candidate proposal      |
-| Email Sub-Agent         | Connected Agent        | Email send, reply, forward, list, flag                     |
-| Meeting Confirmation    | Topic (Adaptive Card)  | Rich card with FactSet + Action.OpenUrl after meeting creation |
-| Meeting Management MCP  | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)                   |
-| Email Management MCP    | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                            |
+| Component              | Type                   | Description                                                    |
+| ---------------------- | ---------------------- | -------------------------------------------------------------- |
+| Biz-Ops Calendar Agent | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent                 |
+| Calendar Sub-Agent     | Connected Agent        | Schedule lookup, meeting creation, candidate proposal          |
+| Email Sub-Agent        | Connected Agent        | Email send, reply, forward, list, flag                         |
+| Meeting Confirmation   | Topic (Adaptive Card)  | Rich card with FactSet + Action.OpenUrl after meeting creation |
+| Meeting Management MCP | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)                       |
+| Email Management MCP   | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                                |
 
 ## Connected Agents — Multi-Agent Orchestration
 
@@ -145,9 +145,9 @@ User: "Show me 5 unread emails"
 | :--------------------------------------------------------------: | :------------------------------------------------------: | :------------------------------------------------: |
 | ![Self Calendar](screenshots/e2e-test-self-calendar-success.png) | ![E2E](screenshots/e2e-test-multi-person-scheduling.png) | ![Studio](screenshots/e2e-test-copilot-studio.png) |
 
-|                   Adaptive Card (Copilot Studio)                   |
-| :----------------------------------------------------------------: |
-| ![Adaptive Card](screenshots/adaptive-card-copilot-studio.png)     |
+|                 Adaptive Card (Copilot Studio)                 |
+| :------------------------------------------------------------: |
+| ![Adaptive Card](screenshots/adaptive-card-copilot-studio.png) |
 
 ## Business Value
 
@@ -161,12 +161,12 @@ User: "Show me 5 unread emails"
 
 Built from scratch in TypeScript — implements the full cross-user scheduling flow (blocked by DLP in Copilot Studio). Works with VS Code Copilot Chat:
 
-| Tool                    | Description                                   | Read/Write | Adaptive Card |
-| ----------------------- | --------------------------------------------- | ---------- | ------------- |
-| `get_schedule`          | Fetch attendee availability via Graph API     | Read       |               |
-| `find_available_slots`  | Find common free time slots (tentative-aware) | Read       | ✅ Slot candidates card |
+| Tool                    | Description                                   | Read/Write | Adaptive Card                |
+| ----------------------- | --------------------------------------------- | ---------- | ---------------------------- |
+| `get_schedule`          | Fetch attendee availability via Graph API     | Read       |                              |
+| `find_available_slots`  | Find common free time slots (tentative-aware) | Read       | ✅ Slot candidates card      |
 | `create_event`          | Create a Teams meeting event                  | Write      | ✅ Meeting confirmation card |
-| `get_current_date_time` | Get current date/time in UTC and JST          | Read       |               |
+| `get_current_date_time` | Get current date/time in UTC and JST          | Read       |                              |
 
 ### Adaptive Cards
 
@@ -177,8 +177,8 @@ Adaptive Cards are implemented in **both Copilot Studio and the MCP server**:
 
 Sample templates are available in [`docs/adaptive-cards/`](docs/adaptive-cards/) for reference.
 
-| Slot Candidates | Meeting Confirmation |
-|:---:|:---:|
+|         Slot Candidates          |      Meeting Confirmation       |
+| :------------------------------: | :-----------------------------: |
 | 📅 Available Slot Candidates (3) | ✅ Meeting Created Successfully |
 
 **Tech Stack**: MCP SDK v1.26, Express, Streamable HTTP, Zod v4, API Key auth (`crypto.timingSafeEqual`)
@@ -270,7 +270,7 @@ npm run dev
 
 | Technical Item          | Points    | Status                                                                                 |
 | ----------------------- | --------- | -------------------------------------------------------------------------------------- |
-| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                         |
+| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                          |
 | Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                    |
 | External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (works in VS Code; DLP blocks Copilot Studio connection) |
 | OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               |
@@ -294,7 +294,7 @@ No real customer data, PII, or Microsoft Confidential information is included.
 
 ---
 
-*Built with ❤️ using GitHub Copilot + VS Code Agent Mode*
+_Built with ❤️ using GitHub Copilot + VS Code Agent Mode_
 
 This project was created during the Agents League @ TechConnect hackathon.  
 All data shown in demos uses fictional/dummy data (Contoso, Fabrikam, Northwind).  

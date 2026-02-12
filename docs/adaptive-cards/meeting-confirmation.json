@@ -25,7 +25,10 @@
             { "title": "📋 件名", "value": "チームSync" },
             { "title": "📅 日時", "value": "2/17 (月) 10:00 - 10:30" },
             { "title": "⏱ 所要時間", "value": "30 分" },
-            { "title": "👥 参加者", "value": "alice@contoso.com, bob@contoso.com" }
+            {
+              "title": "👥 参加者",
+              "value": "alice@contoso.com, bob@contoso.com"
+            }
           ]
         }
       ]
