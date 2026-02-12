@@ -14,7 +14,7 @@ Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot 
 - 🏆 **Adaptive Cards** — Rich meeting confirmation card with FactSet + Teams join button
 - 📧 **Email Management** — Send, reply, forward, list, and flag emails
 - 🛡️ **DLP Resilience** — Built within real enterprise DLP constraints (5 approaches documented)
-- 🔧 **Custom MCP Server** — Full-featured Calendar MCP Server (TypeScript) with cross-user scheduling
+- 🔧 **Custom MCP Server** — Calendar MCP Server (TypeScript) with cross-user scheduling (built but blocked by DLP in Copilot Studio; works in VS Code Copilot Chat)
 
 ## Architecture
 
@@ -159,7 +159,7 @@ User: "Show me 5 unread emails"
 
 ## Custom MCP Server (calendar-mcp-server/)
 
-Built from scratch in TypeScript — implements the full cross-user scheduling flow (blocked by DLP in Copilot Studio). Works with VS Code Copilot Chat:
+> ⚠️ **Note**: This MCP server was built to enable cross-user scheduling via Graph API's `getSchedule`, but **DLP policy blocked all attempts to connect it to Copilot Studio**. It is included in this repo as a working implementation and can be used with VS Code Copilot Chat.
 
 | Tool                    | Description                                   | Read/Write | Adaptive Card                |
 | ----------------------- | --------------------------------------------- | ---------- | ---------------------------- |
@@ -251,14 +251,17 @@ npm run dev
 
 ## Technical Highlights
 
+**Production Agent (Copilot Studio → M365 Copilot Chat)**:
 - **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation pattern
 - **Adaptive Cards** — Meeting Confirmation Card in Copilot Studio (FactSet + Action.OpenUrl)
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm)
-- **DLP Resilience** — Documented 5 approaches, built working agent within real enterprise constraints
-- **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4, Read + Write tools
+- **DLP Resilience** — Tried 5 approaches, documented all findings, built working agent within constraints
+
+**Custom MCP Server (in repo, blocked by DLP in Copilot Studio)**:
+- **MCP SDK v1.26** — Streamable HTTP transport, Read + Write tools, Zod v4 schemas
+- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth
 - **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware
 - **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
-- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
@@ -278,11 +281,18 @@ npm run dev
 
 ## Built With
 
-- [Copilot Studio](https://copilotstudio.microsoft.com/) — M365 Copilot agent with Connected Agents
-- [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) — Custom MCP server implementation
-- [Microsoft Graph API](https://learn.microsoft.com/graph/) — Calendar operations (getSchedule, createEvent)
+**Production Agent (Copilot Studio → M365 Copilot Chat)**:
+- [Copilot Studio](https://copilotstudio.microsoft.com/) — Connected Agents + Adaptive Cards + Instruction Engineering
+- [M365 Copilot Chat (Teams)](https://teams.microsoft.com/) — Production deployment channel
 - [Office 365 Outlook Connector](https://learn.microsoft.com/connectors/office365/) — Standard connector (DLP-safe)
-- TypeScript, Express, Zod, MCP SDK v1.26
+
+**Custom MCP Server (in repo, works in VS Code, blocked by DLP in Copilot Studio)**:
+- [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) — MCP SDK v1.26, Streamable HTTP
+- [Microsoft Graph API](https://learn.microsoft.com/graph/) — getSchedule, createEvent with app-only auth
+- TypeScript, Express, Zod v4
+
+**Development**:
+- [GitHub Copilot (VS Code Agent Mode)](https://code.visualstudio.com/docs/copilot/overview) — AI-assisted coding + Playwright browser automation
 
 ## Disclaimer
 
@@ -294,8 +304,4 @@ No real customer data, PII, or Microsoft Confidential information is included.
 
 ---
 
-_Built with ❤️ using GitHub Copilot + VS Code Agent Mode_
-
-This project was created during the Agents League @ TechConnect hackathon.  
-All data shown in demos uses fictional/dummy data (Contoso, Fabrikam, Northwind).  
-No real customer data, PII, or Microsoft Confidential information is included.
+*Built with ❤️ using GitHub Copilot + VS Code Agent Mode*
