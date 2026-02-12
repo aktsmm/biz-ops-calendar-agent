@@ -24,10 +24,10 @@ Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot 
 M365 Copilot Chat (Teams / Web)
   └── Copilot Studio Agent (Biz-Ops Calendar Agent) — Orchestrator/Router
         ├── Calendar Sub-Agent (Connected Agent)
-        │     └── 会議管理 MCP サーバー (Office 365 Outlook Connector)
+        │     └── Meeting Management MCP Server (Office 365 Outlook Connector)
         │           └── GetCalendarView, CreateMeeting, UpdateMeeting, etc.
         └── Email Sub-Agent (Connected Agent)
-              └── メール管理 MCP サーバー (Office 365 Outlook Connector)
+              └── Email Management MCP Server (Office 365 Outlook Connector)
                     └── SendEmail, ListEmails, ReplyToEmail, FlagEmail, etc.
 ```
 
@@ -55,8 +55,8 @@ M365 Copilot Chat (Teams / Web)
 | Calendar Sub-Agent      | Connected Agent        | Schedule lookup, meeting creation, candidate proposal      |
 | Email Sub-Agent         | Connected Agent        | Email send, reply, forward, list, flag                     |
 | Meeting Confirmation    | Topic (Adaptive Card)  | Rich card with FactSet + Action.OpenUrl after meeting creation |
-| 会議管理 MCP サーバー   | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)                   |
-| メール管理 MCP サーバー | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                            |
+| Meeting Management MCP  | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)                   |
+| Email Management MCP    | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                            |
 
 ## Connected Agents — Multi-Agent Orchestration
 
@@ -106,36 +106,36 @@ Handles email operations via Office 365 Outlook connector — send, reply, forwa
 ### 1. Check My Schedule
 
 ```
-User: "今日の予定を教えて"
+User: "Show me today's schedule"
 
 → Orchestrator → Calendar Sub-Agent
-→ GetCalendarViewOfMeetings (会議管理 MCP / O365)
-→ Returns today's meetings with times, subjects in JST
+→ GetCalendarViewOfMeetings (Meeting Management MCP / O365)
+→ Returns today's meetings with times and subjects
 ```
 
 ### 2. Schedule a Meeting ⭐
 
 ```
-User: "来週30分のミーティングができる空き時間を教えて"
+User: "Find free 30-minute slots next week"
 
-Step 1: GetCurrentDateTime → 今日の日付を確定
-Step 2: GetCalendarViewOfMeetings → 自分の来週の予定を取得
-Step 3: 空き時間を分析し候補を提示
-        📅 候補1: 2/17 (月) 10:00 - 10:30 JST
-        📅 候補2: 2/17 (月) 14:00 - 14:30 JST
-        📅 候補3: 2/18 (火) 11:00 - 11:30 JST
-Step 4: User: "1番で作成して。タイトルは「チームSync」"
+Step 1: GetCurrentDateTime → Anchor today's date
+Step 2: GetCalendarViewOfMeetings → Fetch next week's schedule
+Step 3: Analyze free time and present candidates
+        📅 Candidate 1: 2/17 (Mon) 10:00 - 10:30
+        📅 Candidate 2: 2/17 (Mon) 14:00 - 14:30
+        📅 Candidate 3: 2/18 (Tue) 11:00 - 11:30
+Step 4: User: "Go with #1. Title: Team Sync"
 Step 5: CreateMeeting (calendar_id="Calendar", isOnlineMeeting=true)
-Step 6: ✅ Meeting Confirmation Card (Adaptive Card) — 件名・日時・参加者・ Teams リンク表示
+Step 6: ✅ Meeting Confirmation Card (Adaptive Card) — subject, date/time, attendees, Teams link
 ```
 
 ### 3. Email Operations
 
 ```
-User: "未読メールを5件表示して"
+User: "Show me 5 unread emails"
 
 → Orchestrator → Email Sub-Agent
-→ メール管理 MCP (O365 Outlook)
+→ Email Management MCP (O365 Outlook)
 → Returns sender, subject, received date
 ```
 
@@ -179,7 +179,7 @@ Sample templates are available in [`docs/adaptive-cards/`](docs/adaptive-cards/)
 
 | Slot Candidates | Meeting Confirmation |
 |:---:|:---:|
-| 📅 空き時間候補 (3件) | ✅ 会議が作成されました |
+| 📅 Available Slot Candidates (3) | ✅ Meeting Created Successfully |
 
 **Tech Stack**: MCP SDK v1.26, Express, Streamable HTTP, Zod v4, API Key auth (`crypto.timingSafeEqual`)
 
@@ -211,7 +211,7 @@ npm run dev
 
 1. Go to [copilotstudio.microsoft.com](https://copilotstudio.microsoft.com)
 2. Create agent "Biz-Ops Calendar Agent"
-3. Add tools: 会議管理 MCP サーバー + メール管理 MCP サーバー (O365 Outlook)
+3. Add tools: Meeting Management MCP + Email Management MCP (O365 Outlook)
 4. Create Connected Agents: Calendar Sub-Agent, Email Sub-Agent
 5. Configure Instructions for Orchestrator, Calendar Sub-Agent, Email Sub-Agent
 6. Publish → Channels → Teams and Microsoft 365 Copilot
