@@ -186,6 +186,14 @@ User: "Show me 5 unread emails"
 
 ## Screenshots
 
+### Find Available Slots (★/🔄 + ◎○△ Point Table)
+
+|                      Trace & Response                       |                      Point Table & DLP Notice                      |
+| :---------------------------------------------------------: | :----------------------------------------------------------------: |
+| ![Find Slots](screenshots/copilot-studio-find-slots-full.png) | ![Response](screenshots/copilot-studio-find-slots-response.png) |
+
+### End-to-End Tests
+
 |                          Self Calendar                           |                      E2E Scheduling                      |                   Copilot Studio                   |
 | :--------------------------------------------------------------: | :------------------------------------------------------: | :------------------------------------------------: |
 | ![Self Calendar](screenshots/e2e-test-self-calendar-success.png) | ![E2E](screenshots/e2e-test-multi-person-scheduling.png) | ![Studio](screenshots/e2e-test-copilot-studio.png) |
