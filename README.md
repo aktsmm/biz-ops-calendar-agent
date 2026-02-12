@@ -153,11 +153,10 @@ Built from scratch in TypeScript — available for VS Code local development and
 cd calendar-mcp-server
 npm install
 
-# Register Entra ID App (creates .env automatically)
-cd .. && pwsh -File scripts/setup-azure-app.ps1
+# Create .env with your Entra ID App credentials
+# (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, MCP_API_KEY)
 
-# Start the server
-cd calendar-mcp-server && npm run dev
+npm run dev
 # → http://localhost:3001/mcp
 ```
 
@@ -207,8 +206,6 @@ Action: エージェントに応答する (Skills)
 │   │       └── slotCalculator.ts        # Slot calculation logic
 │   ├── package.json
 │   └── tsconfig.json
-├── scripts/
-│   └── setup-azure-app.ps1              # Entra ID App Registration
 ├── docs/
 │   ├── copilot-studio-calendar-sub-agent-instructions.md
 │   └── demo-script.md
