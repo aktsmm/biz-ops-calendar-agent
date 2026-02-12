@@ -118,15 +118,48 @@ User: "Show me today's schedule"
 ```
 User: "Find free 30-minute slots next week"
 
-Step 1: GetCurrentDateTime → Anchor today's date
-Step 2: GetCalendarViewOfMeetings → Fetch next week's schedule
-Step 3: Analyze free time and present candidates
-        📅 Candidate 1: 2/17 (Mon) 10:00 - 10:30
-        📅 Candidate 2: 2/17 (Mon) 14:00 - 14:30
-        📅 Candidate 3: 2/18 (Tue) 11:00 - 11:30
-Step 4: User: "Go with #1. Title: Team Sync"
-Step 5: CreateMeeting (calendar_id="Calendar", isOnlineMeeting=true)
-Step 6: ✅ Meeting Confirmation Card (Adaptive Card) — subject, date/time, attendees, Teams link
+Step 1: GetCurrentDateTime → Anchor today's date (e.g. jstDate="2026-02-13")
+Step 2: GetCalendarViewOfMeetings → Fetch next week's schedule (Mon-Fri)
+Step 3: Analyze free time → subtract busy/OOF/working-elsewhere slots
+        from business hours (09:00-18:00 JST)
+Step 4: Present candidates to user:
+```
+
+**Candidate Display Format** (actual agent output):
+
+```
+📅 Available slots next week (30 min):
+
+1. 2/17 (Mon) 10:00 - 10:30 ✅
+2. 2/17 (Mon) 14:00 - 14:30 ✅
+3. 2/18 (Tue) 11:00 - 11:30 ⚠️ Tentative meeting exists
+
+⚠️ = You have a tentative (not yet confirmed) meeting at this time.
+     You can still book — the tentative meeting can be declined.
+
+💡 Note: Other attendees' schedules cannot be checked due to DLP policy.
+   The invite will be sent as a Teams meeting — attendees accept/decline.
+
+→ Pick a number to create the meeting, or say "all" to send all as invites.
+```
+
+```
+Step 5: User: "Go with #1. Title: Team Sync"
+Step 6: CreateMeeting (calendar_id="Calendar", isOnlineMeeting=true)
+Step 7: ✅ Meeting Confirmation Card (Adaptive Card)
+```
+
+**Meeting Confirmation Display** (Adaptive Card in Teams):
+
+```
+✅ Meeting Created
+
+📌 Title:    Team Sync
+📅 Date:     2/17 (Mon) 10:00 - 10:30 JST
+👥 Attendees: user@example.com
+🔗 Teams:    [Join Meeting]
+
+The meeting invite has been sent. Attendees can accept or decline.
 ```
 
 ### 3. Email Operations
