@@ -1,7 +1,7 @@
 # Biz-Ops Calendar Agent — Smart Scheduling for M365 Copilot
 
 > **Agents League @ TechConnect** — Track 3: Enterprise Agents (Copilot Studio)  
-> Connected Agents + Power Automate Bridge + Custom MCP Server
+> Connected Agents + Instruction Engineering + Custom MCP Server
 
 ![Demo](demogif/2026-02-13_07h27_03.gif)
 
@@ -9,12 +9,11 @@
 
 Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot Chat (Teams)** that provides smart scheduling capabilities:
 
-- 📅 **Smart Scheduling** — Check your schedule, find other users' availability, and create meetings
+- 📅 **Smart Scheduling** — Check your schedule, propose meeting candidates, and create meetings
 - 🗓️ **Meeting Creation** — Create Teams meetings with online meeting links, with mandatory confirmation flow
-- 📊 **Cross-User Availability** — Fetch any colleague's Free/Busy via Power Automate + Graph API bridge
 - 📧 **Email Management** — Send, reply, forward, list, and flag emails (via Email Sub-Agent)
 - 🤖 **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation
-- 🔧 **Custom MCP Server** — Full-featured Calendar MCP Server (TypeScript) for VS Code local development
+- 🔧 **Custom MCP Server** — Full-featured Calendar MCP Server (TypeScript) with Read + Write tools
 
 ## Architecture
 
@@ -24,39 +23,38 @@ Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot 
 M365 Copilot Chat (Teams / Web)
   └── Copilot Studio Agent (Biz-Ops Calendar Agent) — Orchestrator/Router
         ├── Calendar Sub-Agent (Connected Agent)
-        │     ├── 会議管理 MCP サーバー (Office 365 Outlook Connector)
-        │     │     └── GetCalendarView, CreateMeeting, UpdateMeeting, etc.
-        │     └── GetSchedule Flow (Power Automate エージェントフロー)
-        │           └── Office 365 Outlook「HTTP 要求を送信します」(Delegated auth)
-        │                 └── Graph API /me/calendar/getSchedule
+        │     └── 会議管理 MCP サーバー (Office 365 Outlook Connector)
+        │           └── GetCalendarView, CreateMeeting, UpdateMeeting, etc.
         └── Email Sub-Agent (Connected Agent)
               └── メール管理 MCP サーバー (Office 365 Outlook Connector)
                     └── SendEmail, ListEmails, ReplyToEmail, FlagEmail, etc.
 ```
 
-## DLP Challenge & Solution
+## DLP Challenge & What We Learned
 
-> **Enterprise environments impose DLP (Data Loss Prevention) policies** that restrict which connectors can be used in Power Platform. This project encountered and solved a real-world DLP constraint.
+> **Enterprise environments impose DLP (Data Loss Prevention) policies** that restrict which connectors can be used in Power Platform. This project encountered real-world DLP constraints and documents the findings.
 
-| What We Tried                                           | Result         | Root Cause                                                       |
-| ------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
-| Custom MCP endpoint (Dev Tunnel / Azure Container Apps) | ❌ Blocked     | DLP policy blocks custom MCP endpoints                           |
-| Microsoft MCP Servers (Agent 365 Outlook Calendar MCP)  | ❌ Blocked     | Premium connector, blocked by `Personal Developer (default)` DLP |
-| HTTP connector (Premium)                                | ❌ Blocked     | Premium connector, same DLP policy                               |
-| **Office 365 Outlook connector (Standard)**             | **✅ Allowed** | Standard connector in Business data group                        |
+| What We Tried                                           | Result     | Root Cause                                                       |
+| ------------------------------------------------------- | ---------- | ---------------------------------------------------------------- |
+| Custom MCP endpoint (Dev Tunnel / Azure Container Apps) | ❌ Blocked | DLP policy blocks custom MCP endpoints                           |
+| Microsoft MCP Servers (Agent 365 Outlook Calendar MCP)  | ❌ Blocked | Premium connector, blocked by `Personal Developer (default)` DLP |
+| HTTP connector (Premium)                                | ❌ Blocked | Premium connector, same DLP policy                               |
+| Power Automate agent flow (Graph API getSchedule)       | ❌ Blocked | O365 Outlook "Send HTTP request" also restricted by DLP          |
+| **Office 365 Outlook connector (Standard tools only)**  | **✅ OK**  | Standard connector in Business data group                        |
 
-**Solution: Power Automate Bridge Pattern** — Wrap Graph API calls inside a Power Automate agent flow using the Office 365 Outlook connector's "Send an HTTP request" action (standard connector, **OAuth 2.0 delegated auth**). This provides the same functionality as the custom MCP server without triggering DLP restrictions.
+**What We Could Use**: Only the standard built-in tools of the Office 365 Outlook connector (GetCalendarView, CreateMeeting, etc.) — these are limited to the **current user's own calendar**.
+
+**Workaround**: Since cross-user availability (`getSchedule`) was blocked, the agent proposes meeting candidates based on the user's own free time and lets attendees accept/decline via the Teams meeting invite. The Custom MCP Server in this repo implements the full cross-user scheduling flow and works in VS Code Copilot Chat.
 
 ## Copilot Studio Components
 
-| Component               | Type                      | Description                                           |
-| ------------------------ | ------------------------- | ----------------------------------------------------- |
-| Biz-Ops Calendar Agent   | Parent Agent (Router)     | Routes requests to Calendar or Email Sub-Agent        |
-| Calendar Sub-Agent       | Connected Agent           | Schedule lookup, availability check, meeting creation |
-| Email Sub-Agent          | Connected Agent           | Email send, reply, forward, list, flag                |
-| GetSchedule Flow         | Power Automate Agent Flow | Graph API `getSchedule` bridge (delegated auth)       |
-| 会議管理 MCP サーバー    | O365 Outlook Connector    | GetCalendarView, CreateMeeting (9 tools)              |
-| メール管理 MCP サーバー  | O365 Outlook Connector    | SendEmail, ListEmails (6 tools)                       |
+| Component               | Type                   | Description                                           |
+| ------------------------ | ---------------------- | ----------------------------------------------------- |
+| Biz-Ops Calendar Agent   | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent        |
+| Calendar Sub-Agent       | Connected Agent        | Schedule lookup, meeting creation, candidate proposal |
+| Email Sub-Agent          | Connected Agent        | Email send, reply, forward, list, flag                |
+| 会議管理 MCP サーバー    | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)              |
+| メール管理 MCP サーバー  | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                       |
 
 ## Connected Agents — Multi-Agent Orchestration
 
@@ -80,12 +78,11 @@ No manual topic routing or keyword matching needed — the LLM understands inten
 The Calendar Sub-Agent performs complex multi-step workflows via Instructions:
 
 1. **GetCurrentDateTime** (mandatory first step) — Anchors date calculations to prevent hallucination
-2. **GetSchedule Flow** — Calls Power Automate → Graph API to fetch attendee `availabilityView`
-3. **Parse availabilityView** — Decodes 30-min interval string (`"000022220000"`) into Free/Busy/Tentative
-4. **Cross-reference** — Compares with own calendar via `GetCalendarViewOfMeetings`
-5. **Present candidates** — Shows 3 time slots with ✅ Free / ⚠️ Tentative indicators
-6. **User confirmation** — Waits for user to pick a slot (never creates meetings without explicit approval)
-7. **CreateMeeting** — Creates Teams meeting with online link (`isOnlineMeeting=true`)
+2. **GetCalendarViewOfMeetings** — Fetches the user's own schedule for the requested period
+3. **Analyze free time** — Identifies available time slots from the calendar data
+4. **Present candidates** — Shows 3 time slot candidates to the user
+5. **User confirmation** — Waits for user to pick a slot (never creates meetings without explicit approval)
+6. **CreateMeeting** — Creates Teams meeting with online link (`isOnlineMeeting=true`)
 
 ### Email Sub-Agent
 
@@ -113,34 +110,23 @@ User: "今日の予定を教えて"
 → Returns today's meetings with times, subjects in JST
 ```
 
-### 2. Check Other User's Availability
+### 2. Schedule a Meeting ⭐
 
 ```
-User: "alice@contoso.com の明日の空き時間を確認して"
+User: "来週30分のミーティングができる空き時間を教えて"
 
-→ Orchestrator → Calendar Sub-Agent
-→ GetSchedule Flow (Power Automate)
-→ Graph API /me/calendar/getSchedule (delegated auth)
-→ Returns availabilityView (0=Free ✅ / 1=Tentative ⚠️ / 2=Busy ❌)
-```
-
-### 3. E2E Multi-Person Scheduling ⭐
-
-```
-User: "alice@contoso.com と来週30分の打ち合わせを設定して"
-
-Step 1: GetSchedule Flow → alice の空き時間を取得
-Step 2: GetCalendarViewOfMeetings → 自分の予定を取得
-Step 3: 共通の空き時間を計算し候補を提示
+Step 1: GetCurrentDateTime → 今日の日付を確定
+Step 2: GetCalendarViewOfMeetings → 自分の来週の予定を取得
+Step 3: 空き時間を分析し候補を提示
         📅 候補1: 2/17 (月) 10:00 - 10:30 JST
         📅 候補2: 2/17 (月) 14:00 - 14:30 JST
         📅 候補3: 2/18 (火) 11:00 - 11:30 JST
-Step 4: User: "1番で"
+Step 4: User: "1番で作成して。タイトルは「チームSync」"
 Step 5: CreateMeeting (calendar_id="Calendar", isOnlineMeeting=true)
 Step 6: ✅ 会議作成完了 + Teams リンク表示
 ```
 
-### 4. Email Operations
+### 3. Email Operations
 
 ```
 User: "未読メールを5件表示して"
@@ -158,15 +144,15 @@ User: "未読メールを5件表示して"
 
 ## Business Value
 
-- **Universal Pain Point** — Meeting scheduling across time zones and calendars is a daily challenge for every knowledge worker
-- **Cross-User Availability** — Goes beyond basic self-calendar tools; checks other users' Free/Busy status via Graph API
-- **Real Graph API Integration** — Not a mock; actually calls `getSchedule` and `createEvent` against live M365 data
-- **Enterprise-Ready Architecture** — DLP-compliant design pattern reusable across any enterprise tenant
+- **Universal Pain Point** — Meeting scheduling is a daily challenge for every knowledge worker
+- **Enterprise-Ready** — Built within real DLP constraints, not in an idealized environment
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm) prevents accidental meeting creation
+- **DLP Documentation** — Documents real enterprise DLP challenges and workarounds that other teams can reference
+- **Connected Agents Pattern** — Reusable multi-agent orchestration architecture for Copilot Studio
 
 ## Custom MCP Server (calendar-mcp-server/)
 
-Built from scratch in TypeScript — demonstrates MCP protocol implementation with Read + Write tools:
+Built from scratch in TypeScript — a fully functional MCP server with Read + Write tools, including the cross-user scheduling that DLP blocked in Copilot Studio:
 
 | Tool                    | Description                                   | Read/Write |
 | ----------------------- | --------------------------------------------- | ---------- |
@@ -176,6 +162,8 @@ Built from scratch in TypeScript — demonstrates MCP protocol implementation wi
 | `get_current_date_time` | Get current date/time in UTC and JST          | Read       |
 
 **Tech Stack**: MCP SDK v1.26, Express, Streamable HTTP, Zod v4, API Key auth (`crypto.timingSafeEqual`)
+
+> ⚠️ **DLP Limitation**: This MCP server works in VS Code Copilot Chat for local development, but **cannot be connected to Copilot Studio** due to the tenant's DLP policy blocking custom MCP endpoints and premium connectors. In a DLP-unrestricted environment, this server would provide full cross-user scheduling capabilities directly in Copilot Studio.
 
 ## Setup Guide
 
@@ -205,27 +193,10 @@ npm run dev
 2. Create agent "Biz-Ops Calendar Agent"
 3. Add tools: 会議管理 MCP サーバー + メール管理 MCP サーバー (O365 Outlook)
 4. Create Connected Agents: Calendar Sub-Agent, Email Sub-Agent
-5. Create Power Automate agent flow for GetSchedule (see below)
+5. Configure Instructions for Orchestrator, Calendar Sub-Agent, Email Sub-Agent
 6. Publish → Channels → Teams and Microsoft 365 Copilot
 
-> ⚠️ **DLP Note**: Custom MCP endpoints and Microsoft MCP Servers (Agent 365) may be blocked by your tenant's DLP policy. Use the Power Automate bridge pattern (Office 365 Outlook connector → Graph API HTTP request) as a workaround.
-
-### Power Automate GetSchedule Flow
-
-```
-Trigger: エージェントがフローを呼び出したとき (Skills)
-  Input: emails (text), startDateTime (text), endDateTime (text)
-    ↓
-Action: HTTP 要求を送信します (Office 365 Outlook / delegated auth)
-  URI: https://graph.microsoft.com/v1.0/me/calendar/getSchedule
-  Method: POST
-  Body: {"schedules":["<emails>"],"startTime":{"dateTime":"<startDateTime>",
-         "timeZone":"Asia/Tokyo"},"endTime":{"dateTime":"<endDateTime>",
-         "timeZone":"Asia/Tokyo"},"availabilityViewInterval":30}
-    ↓
-Action: エージェントに応答する (Skills)
-  Output: scheduleData = body('HTTP_要求を送信します')
-```
+> ⚠️ **DLP Note**: Custom MCP endpoints, Microsoft MCP Servers (Agent 365), and Power Automate HTTP actions may be blocked by your tenant's DLP policy. The standard Office 365 Outlook connector tools (GetCalendarView, CreateMeeting, etc.) work within DLP constraints.
 
 ## Project Structure
 
@@ -258,32 +229,31 @@ Action: エージェントに応答する (Skills)
 ## Technical Highlights
 
 - **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation pattern
-- **Power Automate Bridge** — DLP-safe Graph API access via Office 365 Outlook connector (OAuth 2.0 delegated auth)
 - **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4 schemas, Read + Write tools
-- **OAuth 2.0 Security** — Delegated auth for Graph API via Power Automate; API Key auth (`crypto.timingSafeEqual`) for MCP server
+- **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware in MCP server
 - **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
-- **Microsoft Graph API** — `getSchedule`, `createEvent` with delegated + app-only auth
+- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth (in MCP server)
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm)
+- **DLP Resilience** — Documented 5 approaches, built working agent within real enterprise constraints
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
-| Criteria                     | Weight | Implementation                                                                                 |
-| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| **Technical Implementation** | 33%    | Connected Agents, Copilot Studio agent, Custom MCP Server, OAuth delegated auth                |
-| **Business Value**           | 33%    | Universal scheduling pain point, cross-user availability, real Graph API integration           |
-| **Innovation & Creativity**  | 34%    | DLP bridge pattern, multi-agent orchestration, instruction engineering for mandatory workflows |
+| Criteria                     | Weight | Implementation                                                                                   |
+| ---------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| **Technical Implementation** | 33%    | Connected Agents, Copilot Studio agent, Custom MCP Server with Read + Write tools                |
+| **Business Value**           | 33%    | Universal scheduling pain point, enterprise DLP documentation, reusable architecture             |
+| **Innovation & Creativity**  | 34%    | DLP constraint navigation, multi-agent orchestration, instruction engineering for safe workflows |
 
-| Technical Item          | Points    | Status                                                                                             |
-| ----------------------- | --------- | -------------------------------------------------------------------------------------------------- |
-| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                                     |
-| Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                                |
-| External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (+ Power Automate bridge for DLP-restricted environments)            |
-| OAuth Security          | 5 pts     | ✅ OAuth 2.0 delegated auth via Power Automate + API Key auth in MCP server                        |
+| Technical Item          | Points    | Status                                                                                 |
+| ----------------------- | --------- | -------------------------------------------------------------------------------------- |
+| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                         |
+| Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                    |
+| External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (works in VS Code; DLP blocks Copilot Studio connection) |
+| OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               |
 
 ## Built With
 
 - [Copilot Studio](https://copilotstudio.microsoft.com/) — M365 Copilot agent with Connected Agents
-- [Power Automate](https://make.powerautomate.com/) — Agent flow for Graph API bridge
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) — Custom MCP server implementation
 - [Microsoft Graph API](https://learn.microsoft.com/graph/) — Calendar operations (getSchedule, createEvent)
 - [Office 365 Outlook Connector](https://learn.microsoft.com/connectors/office365/) — Standard connector (DLP-safe)
