@@ -1,19 +1,20 @@
 # Biz-Ops Calendar Agent — Smart Scheduling for M365 Copilot
 
 > **Agents League @ TechConnect** — Track 3: Enterprise Agents (Copilot Studio)  
-> Connected Agents + Instruction Engineering + Custom MCP Server
+> Connected Agents + Adaptive Cards + Instruction Engineering + Custom MCP Server
 
 ![Demo](demogif/2026-02-13_07h27_03.gif)
 
 ## Overview
 
-Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot Chat (Teams)** that provides smart scheduling capabilities:
+Biz-Ops Calendar Agent is a **Copilot Studio agent** deployed to **M365 Copilot Chat (Teams)** that provides smart scheduling and email management:
 
-- 📅 **Smart Scheduling** — Check your schedule, propose meeting candidates, and create meetings
-- 🗓️ **Meeting Creation** — Create Teams meetings with online meeting links, with mandatory confirmation flow
-- 📧 **Email Management** — Send, reply, forward, list, and flag emails (via Email Sub-Agent)
-- 🤖 **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation
-- 🔧 **Custom MCP Server** — Full-featured Calendar MCP Server (TypeScript) with Read + Write tools
+- 🤖 **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent automatic delegation
+- 📅 **Smart Scheduling** — Check your schedule, propose meeting candidates, create Teams meetings
+- 🏆 **Adaptive Cards** — Rich meeting confirmation card with FactSet + Teams join button
+- 📧 **Email Management** — Send, reply, forward, list, and flag emails
+- 🛡️ **DLP Resilience** — Built within real enterprise DLP constraints (5 approaches documented)
+- 🔧 **Custom MCP Server** — Full-featured Calendar MCP Server (TypeScript) with cross-user scheduling
 
 ## Architecture
 
@@ -48,13 +49,14 @@ M365 Copilot Chat (Teams / Web)
 
 ## Copilot Studio Components
 
-| Component               | Type                   | Description                                           |
-| ----------------------- | ---------------------- | ----------------------------------------------------- |
-| Biz-Ops Calendar Agent  | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent        |
-| Calendar Sub-Agent      | Connected Agent        | Schedule lookup, meeting creation, candidate proposal |
-| Email Sub-Agent         | Connected Agent        | Email send, reply, forward, list, flag                |
-| 会議管理 MCP サーバー   | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)              |
-| メール管理 MCP サーバー | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                       |
+| Component               | Type                   | Description                                                |
+| ----------------------- | ---------------------- | ---------------------------------------------------------- |
+| Biz-Ops Calendar Agent  | Parent Agent (Router)  | Routes requests to Calendar or Email Sub-Agent             |
+| Calendar Sub-Agent      | Connected Agent        | Schedule lookup, meeting creation, candidate proposal      |
+| Email Sub-Agent         | Connected Agent        | Email send, reply, forward, list, flag                     |
+| Meeting Confirmation    | Topic (Adaptive Card)  | Rich card with FactSet + Action.OpenUrl after meeting creation |
+| 会議管理 MCP サーバー   | O365 Outlook Connector | GetCalendarView, CreateMeeting (9 tools)                   |
+| メール管理 MCP サーバー | O365 Outlook Connector | SendEmail, ListEmails (6 tools)                            |
 
 ## Connected Agents — Multi-Agent Orchestration
 
@@ -83,6 +85,7 @@ The Calendar Sub-Agent performs complex multi-step workflows via Instructions:
 4. **Present candidates** — Shows 3 time slot candidates to the user
 5. **User confirmation** — Waits for user to pick a slot (never creates meetings without explicit approval)
 6. **CreateMeeting** — Creates Teams meeting with online link (`isOnlineMeeting=true`)
+7. **Meeting Confirmation Card** — Displays Adaptive Card with meeting details + Teams join button
 
 ### Email Sub-Agent
 
@@ -123,7 +126,7 @@ Step 3: 空き時間を分析し候補を提示
         📅 候補3: 2/18 (火) 11:00 - 11:30 JST
 Step 4: User: "1番で作成して。タイトルは「チームSync」"
 Step 5: CreateMeeting (calendar_id="Calendar", isOnlineMeeting=true)
-Step 6: ✅ 会議作成完了 + Teams リンク表示
+Step 6: ✅ Meeting Confirmation Card (Adaptive Card) — 件名・日時・参加者・ Teams リンク表示
 ```
 
 ### 3. Email Operations
@@ -156,7 +159,7 @@ User: "未読メールを5件表示して"
 
 ## Custom MCP Server (calendar-mcp-server/)
 
-Built from scratch in TypeScript — a fully functional MCP server with Read + Write tools, including the cross-user scheduling that DLP blocked in Copilot Studio:
+Built from scratch in TypeScript — implements the full cross-user scheduling flow (blocked by DLP in Copilot Studio). Works with VS Code Copilot Chat:
 
 | Tool                    | Description                                   | Read/Write | Adaptive Card |
 | ----------------------- | --------------------------------------------- | ---------- | ------------- |
@@ -249,12 +252,13 @@ npm run dev
 ## Technical Highlights
 
 - **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation pattern
-- **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4 schemas, Read + Write tools
-- **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware in MCP server
-- **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
-- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth (in MCP server)
+- **Adaptive Cards** — Meeting Confirmation Card in Copilot Studio (FactSet + Action.OpenUrl)
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm)
 - **DLP Resilience** — Documented 5 approaches, built working agent within real enterprise constraints
+- **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4, Read + Write tools
+- **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware
+- **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
+- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
@@ -266,10 +270,12 @@ npm run dev
 
 | Technical Item          | Points    | Status                                                                                 |
 | ----------------------- | --------- | -------------------------------------------------------------------------------------- |
-| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                          |
+| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                         |
 | Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                    |
 | External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (works in VS Code; DLP blocks Copilot Studio connection) |
-| OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               || Adaptive Cards          | 5 pts     | ✅ Slot candidates card + Meeting confirmation card (in MCP server + templates)        |
+| OAuth Security          | 5 pts     | ✅ API Key auth in MCP server (`crypto.timingSafeEqual`)                               |
+| Adaptive Cards          | 5 pts     | ✅ Meeting Confirmation Card in Copilot Studio (FactSet + Action.OpenUrl)              |
+
 ## Built With
 
 - [Copilot Studio](https://copilotstudio.microsoft.com/) — M365 Copilot agent with Connected Agents
@@ -281,6 +287,14 @@ npm run dev
 ## Disclaimer
 
 See [DISCLAIMER.md](DISCLAIMER.md)
+
+This project was created during the Agents League @ TechConnect hackathon.  
+All data shown in demos uses fictional/dummy data (Contoso, Fabrikam, Northwind).  
+No real customer data, PII, or Microsoft Confidential information is included.
+
+---
+
+*Built with ❤️ using GitHub Copilot + VS Code Agent Mode*
 
 This project was created during the Agents League @ TechConnect hackathon.  
 All data shown in demos uses fictional/dummy data (Contoso, Fabrikam, Northwind).  
