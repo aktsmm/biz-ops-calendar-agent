@@ -142,6 +142,10 @@ User: "未読メールを5件表示して"
 | :--------------------------------------------------------------: | :------------------------------------------------------: | :------------------------------------------------: |
 | ![Self Calendar](screenshots/e2e-test-self-calendar-success.png) | ![E2E](screenshots/e2e-test-multi-person-scheduling.png) | ![Studio](screenshots/e2e-test-copilot-studio.png) |
 
+|                   Adaptive Card (Copilot Studio)                   |
+| :----------------------------------------------------------------: |
+| ![Adaptive Card](screenshots/adaptive-card-copilot-studio.png)     |
+
 ## Business Value
 
 - **Universal Pain Point** — Meeting scheduling is a daily challenge for every knowledge worker
@@ -163,12 +167,12 @@ Built from scratch in TypeScript — a fully functional MCP server with Read + W
 
 ### Adaptive Cards
 
-The MCP server generates **Adaptive Card JSON** alongside structured data for rich UI rendering:
+Adaptive Cards are implemented in **both Copilot Studio and the MCP server**:
 
-- **Slot Candidates Card** — Numbered list with ✅ Free / ⚠️ Tentative indicators per time slot
-- **Meeting Confirmation Card** — FactSet with subject, date/time, attendees + Teams join button
+- **Copilot Studio**: "Meeting Confirmation Card" topic with FactSet + Action.OpenUrl — displays meeting title, date/time, attendees, duration, and Teams join button as a rich card in Teams chat
+- **MCP Server**: `findSlots` and `createEvent` tools generate Adaptive Card JSON alongside structured data
 
-Sample templates are available in [`docs/adaptive-cards/`](docs/adaptive-cards/) for use in Copilot Studio Topics or Teams message extensions.
+Sample templates are available in [`docs/adaptive-cards/`](docs/adaptive-cards/) for reference.
 
 | Slot Candidates | Meeting Confirmation |
 |:---:|:---:|
