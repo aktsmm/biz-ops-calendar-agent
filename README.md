@@ -34,18 +34,6 @@ M365 Copilot Chat (Teams / Web)
                     └── SendEmail, ListEmails, ReplyToEmail, FlagEmail, etc.
 ```
 
-### VS Code Copilot Chat Agents (Local Development)
-
-```
-VS Code Copilot Chat
-  └── @orchestrator (.agent.md)
-        ├── @availability-finder → Calendar MCP Server (localhost:3001)
-        │     └── Microsoft Graph API (App-only auth)
-        │           └── get_schedule, find_available_slots, create_event
-        ├── @task-manager → WorkIQ MCP
-        └── @report-generator → WorkIQ MCP
-```
-
 ## DLP Challenge & Solution
 
 > **Enterprise environments impose DLP (Data Loss Prevention) policies** that restrict which connectors can be used in Power Platform. This project encountered and solved a real-world DLP constraint.
@@ -57,7 +45,7 @@ VS Code Copilot Chat
 | HTTP connector (Premium)                                | ❌ Blocked     | Premium connector, same DLP policy                               |
 | **Office 365 Outlook connector (Standard)**             | **✅ Allowed** | Standard connector in Business data group                        |
 
-**Solution: Power Automate Bridge Pattern** — Wrap Graph API calls inside a Power Automate agent flow using the Office 365 Outlook connector's "Send an HTTP request" action (standard connector, delegated auth). This provides the same functionality as the custom MCP server without triggering DLP restrictions.
+**Solution: Power Automate Bridge Pattern** — Wrap Graph API calls inside a Power Automate agent flow using the Office 365 Outlook connector's "Send an HTTP request" action (standard connector, **OAuth 2.0 delegated auth**). This provides the same functionality as the custom MCP server without triggering DLP restrictions.
 
 ## Copilot Studio Components
 
@@ -125,9 +113,17 @@ User: "未読メールを5件表示して"
 |:---:|:---:|:---:|
 | ![Self Calendar](screenshots/e2e-test-self-calendar-success.png) | ![E2E](screenshots/e2e-test-multi-person-scheduling.png) | ![Studio](screenshots/e2e-test-copilot-studio.png) |
 
+## Business Value
+
+- **Universal Pain Point** — Meeting scheduling across time zones and calendars is a daily challenge for every knowledge worker
+- **Cross-User Availability** — Goes beyond basic self-calendar tools; checks other users' Free/Busy status via Graph API
+- **Real Graph API Integration** — Not a mock; actually calls `getSchedule` and `createEvent` against live M365 data
+- **Enterprise-Ready Architecture** — DLP-compliant design pattern reusable across any enterprise tenant
+- **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm) prevents accidental meeting creation
+
 ## Custom MCP Server (calendar-mcp-server/)
 
-Built from scratch in TypeScript — available for VS Code local development and demonstrates MCP protocol implementation:
+Built from scratch in TypeScript — demonstrates MCP protocol implementation with Read + Write tools:
 
 | Tool                    | Description                                   | Read/Write |
 | ----------------------- | --------------------------------------------- | ---------- |
@@ -219,27 +215,27 @@ Action: エージェントに応答する (Skills)
 ## Technical Highlights
 
 - **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation pattern
-- **Power Automate Bridge** — DLP-safe Graph API access via Office 365 Outlook connector
-- **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4 schemas
+- **Power Automate Bridge** — DLP-safe Graph API access via Office 365 Outlook connector (OAuth 2.0 delegated auth)
+- **Custom MCP Server** — TypeScript, MCP SDK v1.26, Streamable HTTP, Zod v4 schemas, Read + Write tools
+- **OAuth 2.0 Security** — Delegated auth for Graph API via Power Automate; API Key auth (`crypto.timingSafeEqual`) for MCP server
 - **Tentative Handling** — Graph `availabilityView` "1" treated as potential slots with confidence scoring
-- **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware
-- **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only + delegated auth
+- **Microsoft Graph API** — `getSchedule`, `createEvent` with delegated + app-only auth
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm)
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
 | Criteria                     | Weight | Implementation                                                                                 |
 | ---------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| **Technical Implementation** | 33%    | Connected Agents (15pts), Copilot Studio agent (Pass), Custom MCP Server in repo               |
+| **Technical Implementation** | 33%    | Connected Agents, Copilot Studio agent, Custom MCP Server, OAuth delegated auth                |
 | **Business Value**           | 33%    | Universal scheduling pain point, cross-user availability, real Graph API integration           |
 | **Innovation & Creativity**  | 34%    | DLP bridge pattern, multi-agent orchestration, instruction engineering for mandatory workflows |
 
-| Technical Item          | Points    | Status                                                                               |
-| ----------------------- | --------- | ------------------------------------------------------------------------------------ |
-| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                       |
-| Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent                                              |
-| External MCP Server     | 8 pts     | ✅ Built & in repo (DLP blocks direct connection — PA bridge as workaround)          |
-| API Key Security        | 5 pts     | ✅ Implemented in MCP server (`MCP_API_KEY`, `crypto.timingSafeEqual`)               |
+| Technical Item          | Points    | Status                                                                                             |
+| ----------------------- | --------- | -------------------------------------------------------------------------------------------------- |
+| M365 Copilot Chat Agent | Pass/Fail | ✅ Copilot Studio → M365 Copilot Chat (Teams)                                                     |
+| Connected Agents        | 15 pts    | ✅ Calendar Sub-Agent + Email Sub-Agent (multi-agent orchestration)                                |
+| External MCP Server     | 8 pts     | ✅ Read + Write tools in repo (+ Power Automate bridge for DLP-restricted environments)            |
+| OAuth Security          | 5 pts     | ✅ OAuth 2.0 delegated auth via Power Automate + API Key auth in MCP server                        |
 
 ## Built With
 
