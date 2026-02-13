@@ -188,8 +188,8 @@ User: "Show me 5 unread emails"
 
 ### Find Available Slots (★/🔄 + ◎○△ Point Table)
 
-|                      Trace & Response                       |                      Point Table & DLP Notice                      |
-| :---------------------------------------------------------: | :----------------------------------------------------------------: |
+|                       Trace & Response                        |                    Point Table & DLP Notice                     |
+| :-----------------------------------------------------------: | :-------------------------------------------------------------: |
 | ![Find Slots](screenshots/copilot-studio-find-slots-full.png) | ![Response](screenshots/copilot-studio-find-slots-response.png) |
 
 ### End-to-End Tests
@@ -305,12 +305,14 @@ npm run dev
 ## Technical Highlights
 
 **Production Agent (Copilot Studio → M365 Copilot Chat)**:
+
 - **Connected Agents** — Orchestrator → Calendar Sub-Agent + Email Sub-Agent delegation pattern
 - **Adaptive Cards** — Meeting Confirmation Card in Copilot Studio (FactSet + Action.OpenUrl)
 - **Instruction Engineering** — Mandatory 3-step meeting creation workflow (check → propose → confirm)
 - **DLP Resilience** — Tried 5 approaches, documented all findings, built working agent within constraints
 
 **Custom MCP Server (in repo, blocked by DLP in Copilot Studio)**:
+
 - **MCP SDK v1.26** — Streamable HTTP transport, Read + Write tools, Zod v4 schemas
 - **Microsoft Graph API** — `getSchedule`, `createEvent` with app-only auth
 - **API Key Auth** — `crypto.timingSafeEqual` timing-safe comparison middleware
@@ -336,15 +338,15 @@ AG-Private_Biz_Ops (VS Code Agent Workflow — private repo)
 
 **What was translated from VS Code Agent Workflow to Copilot Studio Instructions:**
 
-| VS Code Agent Workflow (`.agent.md`) | Copilot Studio Instructions |
-|---|---|
-| `orchestrator.agent.md` routing rules | Connected Agents — Instruction-based routing |
-| `availability-finder.agent.md` I/O Contract | Calendar Sub-Agent 3-step workflow |
-| Candidate display format (★/🔄 + ◎○△ point table) | RULE 5: Candidate Display Format |
-| `slotCalculator.ts` Tentative handling | availabilityView interpretation rules |
-| `slotCalculator.ts` WorkingElsewhere exclusion | "4" = excluded from candidates |
-| Done Criteria (check → propose → confirm) | Mandatory confirmation before CreateMeeting |
-| OOF Pre-Check phase | GetCurrentDateTime mandatory first step |
+| VS Code Agent Workflow (`.agent.md`)              | Copilot Studio Instructions                  |
+| ------------------------------------------------- | -------------------------------------------- |
+| `orchestrator.agent.md` routing rules             | Connected Agents — Instruction-based routing |
+| `availability-finder.agent.md` I/O Contract       | Calendar Sub-Agent 3-step workflow           |
+| Candidate display format (★/🔄 + ◎○△ point table) | RULE 5: Candidate Display Format             |
+| `slotCalculator.ts` Tentative handling            | availabilityView interpretation rules        |
+| `slotCalculator.ts` WorkingElsewhere exclusion    | "4" = excluded from candidates               |
+| Done Criteria (check → propose → confirm)         | Mandatory confirmation before CreateMeeting  |
+| OOF Pre-Check phase                               | GetCurrentDateTime mandatory first step      |
 
 ## Evaluation Criteria (Track 3: Enterprise Agents)
 
@@ -365,16 +367,19 @@ AG-Private_Biz_Ops (VS Code Agent Workflow — private repo)
 ## Built With
 
 **Production Agent (Copilot Studio → M365 Copilot Chat)**:
+
 - [Copilot Studio](https://copilotstudio.microsoft.com/) — Connected Agents + Adaptive Cards + Instruction Engineering
 - [M365 Copilot Chat (Teams)](https://teams.microsoft.com/) — Production deployment channel
 - [Office 365 Outlook Connector](https://learn.microsoft.com/connectors/office365/) — Standard connector (DLP-safe)
 
 **Custom MCP Server (in repo, works in VS Code, blocked by DLP in Copilot Studio)**:
+
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) — MCP SDK v1.26, Streamable HTTP
 - [Microsoft Graph API](https://learn.microsoft.com/graph/) — getSchedule, createEvent with app-only auth
 - TypeScript, Express, Zod v4
 
 **Development**:
+
 - [GitHub Copilot (VS Code Agent Mode)](https://code.visualstudio.com/docs/copilot/overview) — AI-assisted coding + Playwright browser automation
 
 ## Disclaimer
@@ -387,4 +392,4 @@ No real customer data, PII, or Microsoft Confidential information is included.
 
 ---
 
-*Built with ❤️ using GitHub Copilot + VS Code Agent Mode*
+_Built with ❤️ using GitHub Copilot + VS Code Agent Mode_
