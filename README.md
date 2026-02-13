@@ -3,6 +3,8 @@
 > **Agents League @ TechConnect** — Track 3: Enterprise Agents (Copilot Studio)  
 > Connected Agents + Adaptive Cards + Instruction Engineering + Custom MCP Server
 
+**[▶️ Try it in M365 Copilot Chat](https://m365.cloud.microsoft/chat/?titleId=T_21e29a9f-3a55-e529-f2b7-1735b1c3c1b4)** (requires M365 Copilot license)
+
 ![Demo](demogif/2026-02-13_07h27_03.gif)
 
 ## Overview
